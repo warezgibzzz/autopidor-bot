@@ -1,7 +1,7 @@
-// server.js
-// where your node app starts
-require('dotenv').config();
-// init project
+const path = require('path');
+const DBSOURCE = path.join(__dirname, '.data', 'database.sqlite');
+
+
 let express = require("express");
 let Sequelize = require("sequelize");
 let app = express();
@@ -11,13 +11,14 @@ const Telegraf = require("telegraf");
 const Telegram = require("telegraf/telegram");
 const commandParts = require("telegraf-command-parts");
 
+require('dotenv').config();
 const bot = new Telegraf(process.env.BOT_TOKEN);
 const tg = new Telegram(process.env.BOT_TOKEN);
 
 bot.use(commandParts());
 app.use(express.static(".data"));
 
-let User, Pidor;
+let User, Pidor, Chat;
 let Chats = [];
 
 // setup a new database
@@ -36,7 +37,7 @@ let sequelize = new Sequelize(
         },
         // Security note: the database is saved to the file `database.sqlite` on the local filesystem. It"s deliberately placed in the `.data` directory
         // which doesn"t get copied if someone remixes the project.
-        storage: ".data/database.sqlite"
+        storage: DBSOURCE
     }
 );
 
@@ -105,10 +106,17 @@ sequelize
             }
         });
         Pidor = sequelize.define("pidors", {
-            user_id: {
+            userId: {
                 type: Sequelize.INTEGER,
                 references: {
                     model: User,
+                    key: "id"
+                }
+            },
+            chatId: {
+                type: Sequelize.INTEGER,
+                references: {
+                    model: Chat,
                     key: "id"
                 }
             },
@@ -116,9 +124,18 @@ sequelize
                 type: Sequelize.DATEONLY
             }
         });
+        Chat = sequelize.define("chats", {
+            chatId: {
+                type: Sequelize.INTEGER
+            }
+        });
         User.hasMany(Pidor, {foreignKey: "user_id", sourceKey: "id"});
         Pidor.belongsTo(User, {
             foreignKey: "user_id",
+            targetKey: "id"
+        });
+        Pidor.belongsTo(User, {
+            foreignKey: "chatId",
             targetKey: "id"
         });
         setup();
@@ -232,11 +249,11 @@ bot.command("pidorall", (ctx) => {
                 return 0;
             })
             users.forEach(user => {
-                if (user.pidors.length > 0) {
+                // if (user.pidors.length > 0) {
                     message = message +
                         index + ". " + resolveUserName(user, true) + " — " + user.pidors.length + " раз(а)\n";
                     index++;
-                }
+                // }
             });
 
             if (index === 1) {
@@ -251,6 +268,13 @@ bot.command("pidorall", (ctx) => {
             tg.sendMessage(ctx.chat.id, "Ждём участников.");
         }
     })
+});
+
+bot.command("start", (ctx) => {
+    tg.sendMessage(ctx.chat.id, "Соскучились петушки?");
+    tg.getChatAdministrators(ctx.chat.id).then((res) => {
+        console.log(res);
+    });
 });
 
 bot.command("pidorstats", (ctx) => {
@@ -284,7 +308,6 @@ bot.command("pidorstats", (ctx) => {
             let message = "Топ-10 пидоров за " + year + " год:\n\n";
             let index = 1;
             users.sort((a, b) => {
-                console.log(a.pidors.length, b.pidors.length)
                 if (a.pidors.length > b.pidors.length) {
                     return -1;
                 } else {
@@ -344,7 +367,7 @@ bot.launch().then(function () {
         response.json(Chats);
     });
 
-    let listener = app.listen(process.env.PORT || '3000', function () {
+    let listener = app.listen(process.env.PORT || '3002', function () {
         console.log("Your app is listening on port " + listener.address().port);
     });
 });
