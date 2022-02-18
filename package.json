@@ -1,0 +1,28 @@
+{
+  "name": "pidor-bot",
+  "version": "0.5.0",
+  "description": "Telegram roulette bot",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "lodash": "^4.17.15",
+    "pg": "^8.3.3",
+    "pg-hstore": "^2.3.3",
+    "sequelize": "^6.3.5",
+    "sequelize-cli": "^6.2.0",
+    "telegraf": "^3.34.1",
+    "telegraf-command-parts": "^1.0.3"
+  },
+  "engines": {
+    "node": "16.x"
+  },
+  "repository": {
+    "url": "https://github.com/warezgibzzz/autopidor-bot"
+  },
+  "license": "MIT",
+  "keywords": []
+}
