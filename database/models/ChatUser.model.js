@@ -1,4 +1,4 @@
-import Sequelize, {Model} from "sequelize";
+import {DataTypes, Model} from "sequelize";
 import Chat from "./Chat.model.js";
 import User from "./User.model.js";
 
@@ -7,14 +7,14 @@ export default class ChatUser extends Model {
         return super.init(
             {
                 userId: {
-                    type: Sequelize.INTEGER,
+                    type: DataTypes.INTEGER,
                     references: {
                         model: User,
                         key: "id"
                     }
                 },
                 chatId: {
-                    type: Sequelize.INTEGER,
+                    type: DataTypes.INTEGER,
                     references: {
                         model: Chat,
                         key: "id"

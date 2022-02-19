@@ -3,7 +3,7 @@
   "description": "Telegram roulette bot",
   "license": "MIT",
   "type": "module",
-  "version": "0.5.0",
+  "version": "0.7.0",
   "main": "app.js",
   "keywords": [],
   "scripts": {

@@ -1,61 +1,44 @@
-import { config } from "dotenv";
-import { Sequelize } from "sequelize";
-import { sequelize, db } from "../"
-import Chat from "./database/models/Chat.model.js";
-import User from "./database/models/User.model.js";
-import Pidor from "./database/models/Pidor.model.js";
-// import ChatUsers from "./models/ChatUsers.model.js";
-
+import {config} from "dotenv";
 config();
 
+import {Sequelize} from "sequelize";
+const env = process.env.NODE_ENV || 'development';
+import dbConfig from  "./database/config/config.js";
+
+export let sequelize = new Sequelize(process.env.DATABASE_URL, dbConfig[env]);
+
+import {db} from "./database/models/index.js"
 
 class Server {
-    models = {
-        Chat: Chat,
-        User: User,
-        Pidor: Pidor,
-        // ChatUser: ChatUsers
+    constructor() {
+        this.sequelize = sequelize;
+        this.models = db;
     }
 
-    init() {
-        this.sequelize = new Sequelize(process.env.DATABASE_URL, {
-            logging: false
-        });
-
+    async init() {
         try {
-            (async () => {
-                await this.sequelize.authenticate();
-                console.log('Connection has been established successfully.');
-            })();
+            await this.sequelize.authenticate();
+            console.log('Connection has been established successfully.');
 
+            Object.values(this.models)
+                .forEach(model => model.init(sequelize));
+
+            Object.values(this.models)
+                .filter(model => typeof model.associate === "function")
+                .forEach(model => model.associate(this.models));
+
+            await this.sequelize.sync({force: true});
+            console.log('Sync success.');
         } catch (error) {
             console.error('Unable to connect to the database:', error);
             process.exit(1);
         }
 
-        Object.values(this.models)
-            .forEach(model => {
-                model.init(this.sequelize);
-            });
-
-        Object.values(this.models)
-            .filter(model => typeof model.associate === "function")
-            .forEach(model => model.associate(this.models));
-
-        this.sequelize.sync({force: true});
-
-
+        return this;
     }
 }
 
 export default Server;
-
-
-
-
-
-
-
 
 
 // bot.use(commandParts());
