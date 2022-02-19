@@ -493,6 +493,11 @@ jsonfile@^6.0.1:
   optionalDependencies:
     graceful-fs "^4.1.6"
 
+lodash-es@^4.17.21:
+  version "4.17.21"
+  resolved "https://registry.yarnpkg.com/lodash-es/-/lodash-es-4.17.21.tgz#43e626c46e6591b7750beb2b50117390c609e3ee"
+  integrity sha512-mKnC+QJ9pWVzv+C4/U3rRsHapFfHvQFoFB92e52xeyGMcX6/OlIl78je1u8vePzYZSkkogMPJ2yjxxsb89cxyw==
+
 lodash@^4.17.15, lodash@^4.17.21:
   version "4.17.21"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.21.tgz#679591c564c3bffaae8454cf0b3df370c3d6911c"
@@ -861,7 +866,7 @@ send@0.17.2:
     range-parser "~1.2.1"
     statuses "~1.5.0"
 
-sequelize-cli@^6.2.0:
+sequelize-cli@^6.4.1:
   version "6.4.1"
   resolved "https://registry.yarnpkg.com/sequelize-cli/-/sequelize-cli-6.4.1.tgz#fb9fbbde733ae887970316a700d264fcf0683770"
   integrity sha512-gIzzFitUGUErq6DYd1JDnsmx7z7XcxzRNe4Py3AqeaxcyjpCAZU2BQnsNPGPMKAaXfMtKi/d9Tu4MtLrehVzIQ==
@@ -879,7 +884,7 @@ sequelize-pool@^7.1.0:
   resolved "https://registry.yarnpkg.com/sequelize-pool/-/sequelize-pool-7.1.0.tgz#210b391af4002762f823188fd6ecfc7413020768"
   integrity sha512-G9c0qlIWQSK29pR/5U2JF5dDQeqqHRragoyahj/Nx4KOOQ3CPPfzxnfqFPCSB7x5UgjOgnZ61nSxz+fjDpRlJg==
 
-sequelize@^6.3.5:
+sequelize@^6.16.1:
   version "6.16.2"
   resolved "https://registry.yarnpkg.com/sequelize/-/sequelize-6.16.2.tgz#4511d1fddcc5d446e6732fffcaf1f0ed29199bb7"
   integrity sha512-0fCdO4qrkuMWizq3blDVHPC4NvrDkRnrFucoJKlaukdatrDpluBw2GXQ53rBQeizbHGefdgehhFiyFzyo0COKg==

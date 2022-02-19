@@ -4,3 +4,4 @@ const app = await new Server()
     .init()
 ;
 
+await app.start();

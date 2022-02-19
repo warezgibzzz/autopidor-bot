@@ -12,9 +12,12 @@ export default class User extends Model {
                 mention: {
                     type: DataTypes.STRING
                 },
-                name: {
+                firstName: {
                     type: DataTypes.STRING
-                }
+                },
+                lastName: {
+                    type: DataTypes.STRING
+                },
             },
             {
                 sequelize,
@@ -25,7 +28,8 @@ export default class User extends Model {
 
     static associate(models) {
         this.belongsToMany(models.Chat, {
-            through: ChatUser
+            through: ChatUser,
+            foreignKey: "userId"
         });
         this.hasMany(models.Pidor, {
             foreignKey: "userId"

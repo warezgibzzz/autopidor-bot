@@ -15,7 +15,7 @@ export default class Chat extends Model {
                 timezone: {
                     type: DataTypes.STRING,
                     allowNull: false,
-                    default: 'UTC'
+                    defaultValue: 'UTC'
                 }
             },
             {
@@ -28,6 +28,7 @@ export default class Chat extends Model {
     static associate(models) {
         this.belongsToMany(models.User, {
             through: ChatUser,
+            foreignKey: "chatId"
 
         });
         this.hasMany(models.Pidor, {
