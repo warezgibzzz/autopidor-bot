@@ -1,6 +1,13 @@
 import {DataTypes, Model} from "sequelize";
 import ChatUser from "./ChatUser.model.js";
 
+/**
+ * @property {Function} addUser add user to chat
+ * @property {Function} hasUser check if user belongs to chat
+ * @property {Function} getUsers get all chat users collection
+ * @property {Function} setUsers set chat users collection
+ *
+ */
 export default class Chat extends Model {
     static init(sequelize, DataType) {
         return super.init(

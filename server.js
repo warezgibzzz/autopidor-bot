@@ -5,12 +5,8 @@ const env = process.env.NODE_ENV || 'development';
 
 import EventEmitter from "events";
 import {QueryTypes, Sequelize} from "sequelize";
-import pkg from "telegraf";
-
-const {Telegraf, Telegram} = pkg;
+import {Telegraf} from "telegraf";
 import commandParts from "telegraf-command-parts";
-
-
 import dbConfig from "./database/config/config.js";
 import {db} from "./database/models/index.js"
 import Scenarios, {MENTION, ROULETTE} from "./scenarios.js";
@@ -28,10 +24,7 @@ class Server {
         this.sequelize = sequelize;
         this.models = db;
         this.bot = new Telegraf(process.env.BOT_TOKEN);
-        this.tg = new Telegram(process.env.BOT_TOKEN);
         this.scenarios = Scenarios;
-
-        this.bot.use(commandParts());
 
         try {
             await this.sequelize.authenticate();
@@ -48,7 +41,7 @@ class Server {
 
             Chat.findAll({plain: false}).then((chats) => {
                 chats.forEach((chat) => {
-                    this.tg.getChat(chat.messengerId).then((data) => {
+                    this.bot.telegram.getChat(chat.messengerId).then((data) => {
                         Chat.update(
                             {
                                 name: data.title
@@ -68,31 +61,36 @@ class Server {
             process.exit(1);
         }
 
-        this.eventEmitter.on('addChat', (chat) => this.createChat(chat));
+        this.eventEmitter.on('addChat', (ctx) => this.createChat(ctx));
+        this.eventEmitter.on('sendHelp', (ctx) => this.sendHelpMessage(ctx));
         this.eventEmitter.on('registerPidor', (ctx) => this.registerPidor(ctx));
-        this.eventEmitter.on('checkPidor', (chat) => this.checkPidor(chat));
-        this.eventEmitter.on('getAllStats', (chat) => this.getAllStats(chat));
+        this.eventEmitter.on('checkPidor', (ctx) => this.checkPidor(ctx));
+        this.eventEmitter.on('getAllStats', (ctx) => this.getAllStats(ctx));
         this.eventEmitter.on('getYearStats', (ctx) => this.getYearStats(ctx));
         this.eventEmitter.on('updateSender', (ctx) => this.updateSender(ctx));
         return this;
     }
 
     async start() {
-        this.bot.command("start", ctx => {
-            this.tg.sendMessage(ctx.chat.id, "Соскучились петушки?");
-            this.eventEmitter.emit('addChat', ctx.chat);
+        this.bot.start(ctx => {
+            ctx.telegram.sendMessage(ctx.chat.id,"Соскучились петушки?");
+            this.eventEmitter.emit('addChat', ctx);
         });
+
+        this.bot.help(ctx => {
+            this.eventEmitter.emit('sendHelp', ctx)
+        })
 
         this.bot.command("reg", ctx => {
             this.eventEmitter.emit('registerPidor', ctx);
         })
 
         this.bot.command("pidor", ctx => {
-            this.eventEmitter.emit('checkPidor', ctx.chat);
+            this.eventEmitter.emit('checkPidor', ctx);
         });
 
         this.bot.command("pidorall", ctx => {
-            this.eventEmitter.emit('getAllStats', ctx.chat);
+            this.eventEmitter.emit('getAllStats', ctx);
         });
 
         this.bot.command("pidorstats", ctx => {
@@ -103,18 +101,36 @@ class Server {
             this.eventEmitter.emit('updateSender', ctx);
         });
 
-        await this.bot.launch();
+        if (env === 'development') {
+            await this.bot.launch();
+        } else {
+            await this.bot.launch({
+                webhook: {
+                    domain: process.env.HOST,
+                    port: Number(process.env.PORT),
+                }
+            })
+        }
+
+        process.once('SIGINT', () => {
+            this.bot.stop('SIGINT')
+            this.sequelize.close()
+        })
+        process.once('SIGTERM', () => {
+            this.bot.stop('SIGTERM')
+            this.sequelize.close()
+        })
     }
 
-    async createChat(chat) {
+    async createChat(ctx) {
         return await Chat.findOrCreate({
             where: {
-                name: chat.title,
-                messengerId: chat.id
+                name: ctx.chat.title,
+                messengerId: ctx.chat.id
             },
             defaults: {
-                name: chat.title,
-                messengerId: chat.id
+                name: ctx.chat.title,
+                messengerId: ctx.chat.id
             }
         });
     }
@@ -145,6 +161,8 @@ class Server {
         if (!(await chat.hasUser(user))) {
             await chat.addUser(user);
         }
+
+        ctx.reply('Ты был добавлен в мою GAYnote, сладкий');
     }
 
     resolveUserName(user, silent) {
@@ -172,24 +190,24 @@ class Server {
         return this.scenarios[type][random(0, this.scenarios[type].length - 1, false)];
     }
 
-    startScenario(counter, scenario, chat, user) {
+    startScenario(counter, scenario, ctx, user) {
         let _this = this;
         if (counter < scenario.length) {
             setTimeout(function () {
                 let message = scenario[counter].replace(/:username:/g, _this.resolveUserName(user, false));
 
-                _this.tg.sendMessage(chat, message, {
+                ctx.telegram.sendMessage(ctx.chat.id, message, {
                     parse_mode: "HTML"
                 }).then(() => {
                     counter++;
-                    _this.startScenario(counter, scenario, chat, user);
+                    _this.startScenario(counter, scenario, ctx, user);
                 });
 
             }, random(0, 5, false) * 1000);
         }
     }
 
-    async checkPidor(chat) {
+    async checkPidor(ctx) {
         let pidor = await Pidor.findOne({
             where: {date: this.sequelize},
             include: [
@@ -198,32 +216,32 @@ class Server {
                 },
                 {
                     model: Chat,
-                    where: {messengerId: chat.id}
+                    where: {messengerId: ctx.chat.id}
                 }
             ]
         })
 
         if (!pidor) {
-            await this.findRandomPidor(chat);
+            await this.findRandomPidor(ctx);
         } else {
             let messagePlaceholder = this.resolveScenario(MENTION);
             let message = messagePlaceholder.replace(/:username:/g, this.resolveUserName(pidor.User, false));
-            await this.tg.sendMessage(pidor.Chat.messengerId, message, {parse_mode: "HTML"});
+            await ctx.telegram.sendMessage(pidor.Chat.messengerId, message, {parse_mode: "HTML"});
         }
     }
 
-    async findRandomPidor(chat) {
+    async findRandomPidor(ctx) {
         const user = await User.findOne({
             order: this.sequelize.random(),
             include: [{
                 model: Chat,
                 through: ChatUser,
-                where: {messengerId: chat.id}
+                where: {messengerId: ctx.chat.id}
             }]
         })
 
         const commandChat = await Chat.findOne({
-            where: {messengerId: chat.id}
+            where: {messengerId: ctx.chat.id}
         });
 
         if (!user || !commandChat) {
@@ -235,11 +253,11 @@ class Server {
                 chatId: commandChat.id,
                 userId: user.id
             });
-            this.startScenario(0, scenario, chat.id, user);
+            this.startScenario(0, scenario, ctx, user);
         }
     }
 
-    async getAllStats(chat) {
+    async getAllStats(ctx) {
         const users = await sequelize.query(
             'SELECT u.id, u.mention, u."firstName", u."lastName", count(p.id) ' +
             'from pidors p ' +
@@ -250,7 +268,7 @@ class Server {
             'order by count(p.id) DESC ' +
             'limit 10',
             {
-                replacements: {chatId: chat.id},
+                replacements: {chatId: ctx.chat.id},
                 model: User,
                 type: QueryTypes.SELECT
             }
@@ -262,7 +280,7 @@ class Server {
             users.forEach(user => {
                 console.log(user);
                 message = message +
-                    index + ". " + this.resolveUserName(user, true) + " — " + user.dataValues.count + " раз(а)\n";
+                    index + ". " + this.resolveUserName(user, true) + " — " + user.getDataValue("count") + " раз(а)\n";
                 index++;
             });
 
@@ -273,17 +291,14 @@ class Server {
             message = message +
                 "\n" +
                 "Всего участников — " + users.length;
-            this.tg.sendMessage(chat.id, message);
+            await ctx.telegram.sendMessage(ctx.chat.id, message);
         } else {
-            this.tg.sendMessage(chat.id, "Ждём участников.");
+            await ctx.telegram.sendMessage(ctx.chat.id, "Ждём участников.");
         }
     }
 
     async getYearStats(ctx) {
         let year = new Date().getFullYear();
-        if (ctx.state.command.splitArgs.length === 1 && ctx.state.command.args.length > 0) {
-            year = parseInt(ctx.state.command.splitArgs[0]);
-        }
 
         const startOfYear = new Date(year, 0, 1);
         const endOfYear = new Date(year, 11, 31);
@@ -317,7 +332,7 @@ class Server {
 
             users.forEach(user => {
                 message = message +
-                    index + ". " + this.resolveUserName(user, true) + " — " + user.dataValues.count + " раз(а)\n";
+                    index + ". " + this.resolveUserName(user, true) + " — " + user.getDataValue("count") + " раз(а)\n";
                 index++;
             });
 
@@ -328,9 +343,9 @@ class Server {
             message = message +
                 "\n" +
                 "Всего участников — " + users.length;
-            this.tg.sendMessage(ctx.chat.id, message);
+            await ctx.telegram.sendMessage(ctx.chat.id, message);
         } else {
-            this.tg.sendMessage(ctx.chat.id, "Ждём участников.");
+            await ctx.telegram.sendMessage(ctx.chat.id, "Ждём участников.");
         }
     }
 
@@ -358,6 +373,10 @@ class Server {
         }
 
         await user.update(userData);
+    }
+
+    async sendHelpMessage(ctx) {
+        await ctx.telegram.sendHelpMessage(ctx.chat.id)
     }
 }
 
