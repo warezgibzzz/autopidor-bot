@@ -6,7 +6,6 @@ const env = process.env.NODE_ENV || 'development';
 import EventEmitter from "events";
 import {QueryTypes, Sequelize} from "sequelize";
 import {Telegraf} from "telegraf";
-import commandParts from "telegraf-command-parts";
 import dbConfig from "./database/config/config.js";
 import {db} from "./database/models/index.js"
 import Scenarios, {MENTION, ROULETTE} from "./scenarios.js";
@@ -101,16 +100,7 @@ class Server {
             this.eventEmitter.emit('updateSender', ctx);
         });
 
-        if (env === 'development') {
-            await this.bot.launch();
-        } else {
-            await this.bot.launch({
-                webhook: {
-                    domain: process.env.HOST,
-                    port: Number(process.env.PORT),
-                }
-            })
-        }
+        await this.bot.launch();
 
         process.once('SIGINT', () => {
             this.bot.stop('SIGINT')
