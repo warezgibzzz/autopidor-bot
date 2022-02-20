@@ -5,12 +5,7 @@ config();
 export default {
     development: {
         url: process.env.DATABASE_URL,
-        dialect: "postgres",
-        dialectOptions: {
-            ssl: {
-                rejectUnauthorized: false
-            }
-        }
+        dialect: "postgres"
     },
     production: {
         url: process.env.DATABASE_URL,
