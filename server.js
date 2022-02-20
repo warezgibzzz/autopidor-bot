@@ -108,7 +108,7 @@ class Server {
             this.eventEmitter.emit('updateSender', ctx);
         });
 
-        await this.http.listen(Number(process.env.PORT),() => {
+        await this.http.listen(Number(process.env.PORT), process.env.HOST,() => {
             console.log('express started');
         });
 
