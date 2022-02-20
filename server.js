@@ -27,6 +27,7 @@ class Server {
         this.scenarios = Scenarios;
         this.http = express();
 
+        await this.bot.telegram.setWebhook(`https://${process.env.HOST}/bot`)
         this.http.use(this.bot.webhookCallback('/bot'))
 
         try {
