@@ -14,6 +14,7 @@ import Chat from "./database/models/Chat.model.js";
 import {random} from "lodash-es";
 import Pidor from "./database/models/Pidor.model.js";
 import ChatUser from "./database/models/ChatUser.model.js";
+import express from "express";
 
 let sequelize = new Sequelize(process.env.DATABASE_URL, dbConfig[env]);
 
@@ -24,6 +25,7 @@ class Server {
         this.models = db;
         this.bot = new Telegraf(process.env.BOT_TOKEN);
         this.scenarios = Scenarios;
+        this.http = express();
 
         try {
             await this.sequelize.authenticate();
@@ -60,6 +62,10 @@ class Server {
             process.exit(1);
         }
 
+        this.http.get('/', (req, res) => {
+            res.json({status: 'ok'})
+        })
+
         this.eventEmitter.on('addChat', (ctx) => this.createChat(ctx));
         this.eventEmitter.on('sendHelp', (ctx) => this.sendHelpMessage(ctx));
         this.eventEmitter.on('registerPidor', (ctx) => this.registerPidor(ctx));
@@ -72,7 +78,7 @@ class Server {
 
     async start() {
         this.bot.start(ctx => {
-            ctx.telegram.sendMessage(ctx.chat.id,"Соскучились петушки?");
+            ctx.telegram.sendMessage(ctx.chat.id, "Соскучились петушки?");
             this.eventEmitter.emit('addChat', ctx);
         });
 
@@ -100,7 +106,20 @@ class Server {
             this.eventEmitter.emit('updateSender', ctx);
         });
 
-        await this.bot.launch();
+        await this.http.listen(Number(process.env.PORT), process.env.HOST, () => {
+            console.log('express started');
+        });
+
+        if (env === 'development') {
+            await this.bot.launch();
+        } else {
+            await this.bot.launch({
+                webhook: {
+                    domain: process.env.HOST,
+                    port: Number(process.env.PORT),
+                }
+            })
+        }
 
         process.once('SIGINT', () => {
             this.bot.stop('SIGINT')
