@@ -28,7 +28,7 @@ class Server {
         this.http = express();
 
         await this.bot.telegram.setWebhook(`https://${process.env.HOST}/bot`)
-        this.http.use(this.bot.webhookCallback('/bot'))
+        this.http.use(this.bot.webhookCallback('/'))
 
         try {
             await this.sequelize.authenticate();
@@ -64,10 +64,6 @@ class Server {
             console.error('Unable to connect to the database:', error);
             process.exit(1);
         }
-
-        this.http.get('/', (req, res) => {
-            res.json({status: 'ok'})
-        })
 
         this.eventEmitter.on('addChat', (ctx) => this.createChat(ctx));
         this.eventEmitter.on('sendHelp', (ctx) => this.sendHelpMessage(ctx));
