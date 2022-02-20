@@ -27,7 +27,7 @@ class Server {
         this.scenarios = Scenarios;
         this.http = express();
 
-        this.http.use(this.bot.webhookCallback(`/telegraf/${this.bot.secretPathComponent()}`))
+        this.http.use(this.bot.webhookCallback('/bot'))
 
         try {
             await this.sequelize.authenticate();
