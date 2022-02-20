@@ -6,7 +6,7 @@ export default class User extends Model {
         return super.init(
             {
                 messengerId: {
-                    type: DataTypes.INTEGER,
+                    type: DataTypes.BIGINT,
                     allowNull: false
                 },
                 mention: {

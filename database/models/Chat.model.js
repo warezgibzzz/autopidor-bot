@@ -13,7 +13,7 @@ export default class Chat extends Model {
         return super.init(
             {
                 messengerId: {
-                    type: DataTypes.INTEGER,
+                    type: DataTypes.BIGINT,
                     allowNull: false
                 },
                 name: {
