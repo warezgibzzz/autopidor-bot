@@ -27,6 +27,8 @@ class Server {
         this.scenarios = Scenarios;
         this.http = express();
 
+        this.http.use(this.bot.webhookCallback(`/telegraf/${this.bot.secretPathComponent()}`))
+
         try {
             await this.sequelize.authenticate();
             console.log('Connection has been established successfully.');
@@ -109,17 +111,6 @@ class Server {
         await this.http.listen(Number(process.env.PORT),() => {
             console.log('express started');
         });
-
-        if (env === 'development') {
-            await this.bot.launch();
-        } else {
-            await this.bot.launch({
-                webhook: {
-                    domain: process.env.HOST,
-                    port: Number(process.env.PORT),
-                }
-            })
-        }
 
         process.once('SIGINT', () => {
             this.bot.stop('SIGINT')
