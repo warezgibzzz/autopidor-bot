@@ -8,7 +8,6 @@ export default {
         dialect: "postgres",
         dialectOptions: {
             ssl: {
-                require: true,
                 rejectUnauthorized: false
             }
         }
@@ -18,7 +17,6 @@ export default {
         dialect: "postgres",
         dialectOptions: {
             ssl: {
-                require: true,
                 rejectUnauthorized: false
             }
         }
