@@ -12,6 +12,7 @@ export default {
         dialect: "postgres",
         dialectOptions: {
             ssl: {
+                mode: "require",
                 rejectUnauthorized: false
             }
         }
