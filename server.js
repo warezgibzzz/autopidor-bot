@@ -28,7 +28,7 @@ class Server {
         this.http = express();
 
         await this.bot.telegram.setWebhook(`https://${process.env.HOST}/bot`)
-        this.http.use(this.bot.webhookCallback('/'))
+        this.http.use(this.bot.webhookCallback('/bot'))
 
         try {
             await this.sequelize.authenticate();
