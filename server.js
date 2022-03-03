@@ -361,11 +361,11 @@ class Server {
             defaults: userData
         });
 
-        if (created) {
+        if (chat && created) {
             await chat.addUser(user);
         }
 
-        if (!(await chat.hasUser(user))) {
+        if (chat && !(await chat.hasUser(user))) {
             await chat.addUser(chat);
         }
 
